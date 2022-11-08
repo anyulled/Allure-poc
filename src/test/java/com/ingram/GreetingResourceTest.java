@@ -1,4 +1,4 @@
-package com.imgram;
+package com.ingram;
 
 import io.qameta.allure.Feature;
 import io.qameta.allure.Issue;

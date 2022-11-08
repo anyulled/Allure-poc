@@ -1,4 +1,4 @@
-package com.imgram;
+package com.ingram;
 
 import io.qameta.allure.Epic;
 import io.quarkus.test.junit.QuarkusIntegrationTest;

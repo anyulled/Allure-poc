@@ -11,6 +11,7 @@
         <allure.version>2.19.0</allure.version>
         <aspectj.version>1.8.10</aspectj.version>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
+        <cucumber.version>7.8.1</cucumber.version>
         <jacoco.version>0.8.8</jacoco.version>
         <junit.jupiter.version>5.9.0</junit.jupiter.version>
         <junit.maven.surefire.plugin.version>2.19.1</junit.maven.surefire.plugin.version>
@@ -24,6 +25,7 @@
         <quarkus.platform.version>2.13.3.Final</quarkus.platform.version>
         <skipITs>false</skipITs>
         <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
+        <surefire.skip>false</surefire.skip>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -31,6 +33,20 @@
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>${quarkus.platform.artifact-id}</artifactId>
                 <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.cucumber</groupId>
+                <artifactId>cucumber-bom</artifactId>
+                <version>7.5.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>5.9.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -76,6 +92,37 @@
             <version>2.19.0</version>
             <scope>runtime</scope>
         </dependency><!-- Allure Jira Commons -->
+
+        <!-- Cucumber -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency><!-- Cucumber Java -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency><!-- Jupiter -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>${cucumber.version}</version>
+        </dependency><!-- Cucumber platform engine -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <scope>test</scope>
+        </dependency><!-- JUnit platform suite -->
+
+        <!-- Other -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.24</version>
+        </dependency><!-- Lombok -->
+
     </dependencies>
     <build>
         <plugins>
@@ -95,8 +142,9 @@
                 </executions>
             </plugin><!-- quarkus maven -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>${compiler-plugin.version}</version>
+                <version>${maven.compiler.plugin.version}</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -106,9 +154,11 @@
                 </configuration>
             </plugin><!-- compiler -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.19.1</version>
+                <version>${junit.maven.surefire.plugin.version}</version>
                 <configuration>
+                    <skip>${surefire.skip}</skip>
                     <includes>
                         <include>**Test.java</include>
                         <include>**Should.java</include>
@@ -126,9 +176,11 @@
                     </systemProperties>
                     <systemPropertyVariables>
                         <allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
-                        <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+                        <junit.jupiter.extensions.autodetection.enabled>true
+                        </junit.jupiter.extensions.autodetection.enabled>
                         <junit.jupiter.execution.parallel.enabled>true</junit.jupiter.execution.parallel.enabled>
-                        <junit.jupiter.execution.parallel.config.strategy>dynamic</junit.jupiter.execution.parallel.config.strategy>
+                        <junit.jupiter.execution.parallel.config.strategy>dynamic
+                        </junit.jupiter.execution.parallel.config.strategy>
                     </systemPropertyVariables>
                 </configuration>
                 <dependencies>
@@ -146,10 +198,11 @@
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjweaver</artifactId>
                         <version>${aspectj.version}</version>
-                    </dependency>
+                    </dependency><!-- aspectjweaver -->
                 </dependencies>
             </plugin><!-- surefire -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <executions>
@@ -159,16 +212,28 @@
                             <goal>verify</goal>
                         </goals>
                         <configuration>
+                            <includes>
+                                <include>**AT.java</include>
+                                <include>**IT.java</include>
+                            </includes>
                             <systemPropertyVariables>
                                 <native.image.path>${project.build.directory}/${project.build.finalName}-runner
                                 </native.image.path>
                                 <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-                                <maven.home>${maven.home}</maven.home>
                             </systemPropertyVariables>
                         </configuration>
                     </execution>
                 </executions>
             </plugin><!-- failsafe -->
+            <plugin>
+                <groupId>io.qameta.allure</groupId>
+                <artifactId>allure-maven</artifactId>
+                <version>${allure.maven.version}</version>
+                <configuration>
+                    <reportVersion>${allure.version}</reportVersion>
+                    <resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
+                </configuration>
+            </plugin><!-- allure maven -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -205,134 +270,5 @@
                 <quarkus.package.type>native</quarkus.package.type>
             </properties>
         </profile><!-- Native -->
-        <profile>
-            <id>allure</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>${maven.compiler.plugin.version}</version>
-                        <configuration>
-                            <source>${java.version}</source>
-                            <target>${java.version}</target>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>${junit.maven.surefire.plugin.version}</version>
-                        <configuration>
-                            <includes>
-                                <include>**Test.java</include>
-                                <include>**Should.java</include>
-                            </includes>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <argLine>
-                                -Dfile.encoding=UTF-8
-                                -javaagent:${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar
-                            </argLine>
-                            <systemPropertyVariables>
-                                <allure.results.directory>${project.build.directory}/allure-results
-                                </allure.results.directory>
-                                <junit.jupiter.extensions.autodetection.enabled>true
-                                </junit.jupiter.extensions.autodetection.enabled>
-                                <junit.jupiter.execution.parallel.enabled>true
-                                </junit.jupiter.execution.parallel.enabled>
-                                <junit.jupiter.execution.parallel.config.strategy>dynamic
-                                </junit.jupiter.execution.parallel.config.strategy>
-                            </systemPropertyVariables>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.junit.platform</groupId>
-                                <artifactId>junit-platform-surefire-provider</artifactId>
-                                <version>${junit.platform.surefire.provider.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.junit.jupiter</groupId>
-                                <artifactId>junit-jupiter-engine</artifactId>
-                                <version>${junit.jupiter.version}</version>
-                            </dependency>
-                            <dependency>
-                                <groupId>org.aspectj</groupId>
-                                <artifactId>aspectjweaver</artifactId>
-                                <version>${aspectj.version}</version>
-                            </dependency>
-                        </dependencies>
-                    </plugin>
-                    <plugin>
-                        <groupId>io.qameta.allure</groupId>
-                        <artifactId>allure-maven</artifactId>
-                        <version>${allure.maven.version}</version>
-                        <configuration>
-                            <reportVersion>${allure.version}</reportVersion>
-                            <resultsDirectory>${project.build.directory}/allure-results</resultsDirectory>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile><!-- Allure -->
-        <profile>
-            <id>sonarqube</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>${maven.compiler.plugin.version}</version>
-                        <configuration>
-                            <source>${java.version}</source>
-                            <target>${java.version}</target>
-                        </configuration>
-                    </plugin><!-- maven-compiler-plugin -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <version>${junit.maven.surefire.plugin.version}</version>
-                        <configuration>
-                            <includes>
-                                <include>**Test.java,**Should.java</include>
-                            </includes>
-                        </configuration>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.junit.platform</groupId>
-                                <artifactId>junit-platform-surefire-provider</artifactId>
-                                <version>${junit.platform.surefire.provider.version}</version>
-                            </dependency><!-- Platform surefire provider -->
-                            <dependency>
-                                <groupId>org.junit.jupiter</groupId>
-                                <artifactId>junit-jupiter-engine</artifactId>
-                                <version>${junit.jupiter.version}</version>
-                            </dependency><!-- Jupiter engine -->
-                        </dependencies>
-                    </plugin><!-- maven-surefire-plugin -->
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>${jacoco.version}</version>
-                        <executions>
-                            <execution>
-                                <id>jacoco-initialize</id>
-                                <goals>
-                                    <goal>prepare-agent</goal>
-                                </goals>
-                                <phase>test-compile</phase>
-                            </execution>
-                            <execution>
-                                <id>jacoco-site</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>report</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin><!-- jacoco-maven-plugin -->
-                </plugins>
-            </build>
-        </profile><!-- Sonarqube -->
     </profiles>
 </project>
